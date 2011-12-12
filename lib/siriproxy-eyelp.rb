@@ -268,21 +268,13 @@ listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Po
 		say "Keine Position gespeichert, verwende 'Position speichern'", spoken: "Keine Position gespeichert."
 	else
 	
-	lon1 = 16.304431948726 #$ortlo #16.308673899999999 
-	lat1 = 48.20761913432201 #$ortla #48.202757399999999 
+	lon1 = $ortlo 
+	lat1 = $ortla 
 	lon2 = $maplo
 	lat2 = $mapla
 	haversine_distance( lat1, lon1, lat2, lon2 )
 	entf = @distances['km']
-#	d = ""
-#	if entf < 1 and entf > 0
-#		entf = @distances['meters']
-#		d = "m"
-#	else
-#		d = "k"
-		entf = (entf * 10**3).round.to_f / 10**3
-#	end
-#	
+	entf = (entf * 10**3).round.to_f / 10**3
 	if entf.to_s == "0.0"
 	say "Sie sind am Ziel angelangt."
 	print entf
@@ -290,8 +282,6 @@ listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Po
 	entf = (entf * 10**3).round.to_f / 10**3
 	ent = ent.to_f
 	ent = (entf * 1000)
-	
-	#ent = (ent * 10**0).round.to_f / 10**0
 	say "Entfernung zum Ziel: " + ent.to_s + " m", spoken: "Entfernung zum Ziel: " + ent.to_s + " Meter"
 	
 	else
