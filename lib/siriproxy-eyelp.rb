@@ -114,9 +114,20 @@ class SiriProxy::Plugin::Eyelp < SiriProxy::Plugin
     	$mapla = object["properties"]["latitude"]
 	end 
 
-
 listen_for /suche (.*)/i do |phrase|
 	ss = ""
+	#if phrase.match(/(ein )/)  # cleaning searchstring: eg:  ein hotel = hotel
+	phrase = phrase.insert(0, " ")
+	begin
+	phrase = phrase.sub( " ein ", " " )
+	phrase = phrase.sub( " eine ", " " )
+	phrase = phrase.sub( " einen ", " " )
+	phrase = phrase.sub( " den ", " " )
+	phrase = phrase.sub( " das ", " " )
+	phrase = phrase.sub( " die ", " " )
+	rescue
+	end
+	
 	if phrase.match(/( hier )/)  # catching here search: suche hier *   :Range 1 
 	ma = phrase.match(/( hier )/)
 	part = ma.post_match.strip
@@ -132,9 +143,10 @@ listen_for /suche (.*)/i do |phrase|
 	part = ma.post_match.strip
 	dos = "http://api.yelp.com/business_review_search?term=" + part.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=25&limit=25&ywsid=" + $ywsid.to_s
 	else	# normal search: suche *   :Range 5
+	phrase = phrase.strip
+	part = phrase
 	dos = "http://api.yelp.com/business_review_search?term=" + phrase.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=5&limit=15&ywsid=" + $ywsid.to_s
 	end
-
 	begin
 		dos = URI.parse(URI.encode(dos)) # allows Unicharacters in the search URL
 		doc = Nokogiri::HTML(open(dos))
@@ -161,10 +173,13 @@ listen_for /suche (.*)/i do |phrase|
 		if ss == "in"
 		say "Keine Einträge in Yelp für '" + part + "' in '" + part2 +"' gefunden."
 		else
-		say "Keine Einträge in Yelp für '" + phrase + "' gefunden."
+		say "Keine Einträge in Yelp für '" + part + "' gefunden."
 		end
 	else
+	if ss == "in" #no sorting if city-search - to get best query on top
+	else
 	busi = Siren.query "$[ /@.distance ]", busi
+	end
 	x = 0
 	add_views = SiriAddViews.new
     add_views.make_root(last_ref_id)
@@ -240,22 +255,22 @@ end
 
 
 # safes position in a global variable
-listen_for /(Position speichern)/i do   
-	$ortla = $mapla
-	$ortlo = $maplo
+listen_for /(|speicher Position|Position speichern|Position abspeichern|Position merken)/i do   
+	@ortla = $mapla
+	@ortlo = $maplo
 	say "aktueller Ort gespeichert, zum abrufen sage 'zeige Position'", spoken: "aktueller Ort gespeichert"
 	#say "lat:" + $ortla.to_s + "  long:" + $ortlo.to_s , spoken: "" 
 	request_completed 
 end
 
 # loads position from a global variable
-listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Position Info)/i do 
-	if $ortla == NIL or $ortlo == NIL
+listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Position anzeigen|Position zeige)/i do 
+	if @ortla == NIL or @ortlo == NIL
 		say "Keine Position gespeichert, verwende 'Position speichern'", spoken: "Keine Position gespeichert."
 	else
 	
-	lon1 = $ortlo 
-	lat1 = $ortla 
+	lon1 = @ortlo 
+	lat1 = @ortla 
 	lon2 = $maplo
 	lat2 = $mapla
 	haversine_distance( lat1, lon1, lat2, lon2 )
@@ -277,7 +292,7 @@ listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Po
 	add_views = SiriAddViews.new
     add_views.make_root(last_ref_id)
     map_snippet = SiriMapItemSnippet.new(true)
-    siri_location = SiriLocation.new("gepeicherter Ort" , "gepeicherter Ort", "gepeicherter Ort", "gepeicherter Ort", "durt", "wo", $ortla.to_f, $ortlo.to_s) 
+    siri_location = SiriLocation.new("gepeicherter Ort" , "gepeicherter Ort", "gepeicherter Ort", "gepeicherter Ort", "durt", "wo", @ortla.to_f, @ortlo.to_s) 
     map_snippet.items << SiriMapItem.new(label="gespeicherter Ort", location=siri_location, detailType="BUSINESS_ITEM")
     print map_snippet.items
     utterance = SiriAssistantUtteranceView.new("Juhu, Ich habe mich gefunden!")
