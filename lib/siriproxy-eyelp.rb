@@ -7,6 +7,7 @@ require 'timeout'
 require 'json'
 require 'open-uri'
 require 'uri'
+require 'siren' #for sorting json hashes
 
 #######
 # 
@@ -115,72 +116,35 @@ class SiriProxy::Plugin::Eyelp < SiriProxy::Plugin
 
 
 listen_for /suche (.*)/i do |phrase|
-	parts = phrase.split
-	len = parts.length
-	i = 0
-	while i < len do 
-		print "------na---"
-		print parts[i]
-		if parts[i] == "in" #catching city-based search:  suche * in * 
-			if i == 1
-			part = parts[0]
-			elsif i == 2
-			part = parts[0] + " " + parts[1]
-			elsif i == 3
-			part = parts[0] + " " + parts[1] + " " + parts[2]
-			elsif i == 4
-			part = parts[0] + " " + parts[1] + " " + parts[2] + " " + parts[3]
-			elsif i == 5
-			part = parts[0] + " " + parts[1] + " " + parts[2] + " " + parts[3] + " " + parts[4]
-			else
-			part = phrase
-			end
-			leni = i
-			leni += 1
-			len = 99
-			i = 100	
-		end
-		i += 1
+	ss = ""
+	if phrase.match(/( hier )/)  # catching here search: suche hier *   :Range 1 
+	ma = phrase.match(/( hier )/)
+	part = ma.post_match.strip
+	dos = "http://api.yelp.com/business_review_search?term=" + part.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=1&limit=10&ywsid=" + $ywsid.to_s
+	elsif phrase.match(/( in )/) # catching city-based search:  suche * in *
+	ma = phrase.match(/( in )/)	
+	part2 = ma.post_match.strip
+	part = ma.pre_match.strip
+	dos = "http://api.yelp.com/business_review_search?term=" + part + "&location=" + part2 + "&limit=15&ywsid=" + $ywsid.to_s
+	ss = "in"
+	elsif phrase.match(/( global )/) # catching global search: suche global *   :Range 25
+	ma = phrase.match(/( global )/)	
+	part = ma.post_match.strip
+	dos = "http://api.yelp.com/business_review_search?term=" + part.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=25&limit=25&ywsid=" + $ywsid.to_s
+	else	# normal search: suche *   :Range 5
+	dos = "http://api.yelp.com/business_review_search?term=" + phrase.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=5&limit=15&ywsid=" + $ywsid.to_s
 	end
-	pa1 = parts[0].strip
+
 	begin
-		if len >= 2 and pa1.strip == "hier"  # Range 1 Search
-			if len == 2
-				pa2 = parts[1].strip
-			elsif len == 3
-				pa2 = parts[1].strip + " " + parts[2].strip
-			elsif len == 4
-				pa2 = parts[1].strip + " " + parts[2].strip + " " + parts[3].strip
-			else
-				pa2 = parts[1].strip
-			end
-			dos = "http://api.yelp.com/business_review_search?term=" + pa2.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=1&limit=10&ywsid=" + $ywsid.to_s
-		elsif len >= 2 and pa1.strip == "global"  # Range 25 Search
-			if len == 2
-				pa2 = parts[1].strip
-			elsif len == 3
-				pa2 = parts[1].strip + " " + parts[2].strip
-			elsif len == 4
-				pa2 = parts[1].strip + " " + parts[2].strip + " " + parts[3].strip
-			else
-				pa2 = parts[1].strip
-			end
-		dos = "http://api.yelp.com/business_review_search?term=" + pa2.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=25&limit=25&ywsid=" + $ywsid.to_s
-		
-		elsif len == 99 # City Search
-		dos = "http://api.yelp.com/business_review_search?term=" + part + "&location=" + parts[leni].strip + "&limit=10&ywsid=" + $ywsid.to_s
-		else # normal Search Radius 5
-		dos = "http://api.yelp.com/business_review_search?term=" + phrase.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=5&limit=10&ywsid=" + $ywsid.to_s
-		end
 		dos = URI.parse(URI.encode(dos)) # allows Unicharacters in the search URL
 		doc = Nokogiri::HTML(open(dos))
 		doc.encoding = 'utf-8'
 		doc = doc.text
-   rescue Timeout::Error
+   	rescue Timeout::Error
      	doc = ""
     end
     if doc == ""
-    	say "Bitte verwende 'suche' + 'lokal'", spoken: "Fehler beim Suchen" 
+    	say "Bitte verwende 'suche' + suchparameter", spoken: "Fehler beim Suchen" 
     	request_completed
     else
 	json = doc.to_s
@@ -192,17 +156,24 @@ listen_for /suche (.*)/i do |phrase|
 	empl.gsub('\"', '"')
 	empl =JSON.parse(empl)
 	busi = empl['businesses']
+	
 	if busi.empty? == true
+		if ss == "in"
+		say "Keine Einträge in Yelp für '" + part + "' in '" + part2 +"' gefunden."
+		else
 		say "Keine Einträge in Yelp für '" + phrase + "' gefunden."
+		end
 	else
+	busi = Siren.query "$[ /@.distance ]", busi
 	x = 0
 	add_views = SiriAddViews.new
     add_views.make_root(last_ref_id)
     map_snippet = SiriMapItemSnippet.new(true)
 	
 	busi.each do |data|
-		siri_location = SiriLocation.new(data['name'], data['address1'], data['city'], data['state_code'], data['country_code'], data['zip'].to_s , data['latitude'].to_s , data['longitude'].to_s) 
-    	map_snippet.items << SiriMapItem.new(label=data['name'], location=siri_location, detailType="BUSINESS_ITEM")
+		sname = data['name'] + "-" + data['avg_rating'].to_s
+		siri_location = SiriLocation.new(sname, data['address1'], data['city'], data['state_code'], data['country_code'], data['zip'].to_s , data['latitude'].to_s , data['longitude'].to_s) 
+    	map_snippet.items << SiriMapItem.new(label=sname , location=siri_location, detailType="BUSINESS_ITEM")
  		x += 1
  	end
 	
@@ -223,6 +194,20 @@ end
 
 # reading from a local JSON File ---- FOR TESTING
 listen_for /(test|test eins)/i do    
+	
+	
+	str = "Restaurant Il Sole Wiener Neustadt"
+	
+	if str.match(/(hier )/)
+	ma = str.match(/(hier )/)
+	print ma.post_match
+	elsif str.match(/(in )/)
+	mb = str.match(/(in )/)	
+	print mb.pre_match.strip
+	print "------"
+	print mb.post_match.strip
+	end
+	
 	json = File.open("plugins/siriproxy-eyelp/jstest", "rb:utf-8")
 	empl = json.read
 	json.close
@@ -233,6 +218,7 @@ listen_for /(test|test eins)/i do
 	empl.gsub('\"', '"')
 	empl =JSON.parse(empl)
 	busi = empl['businesses']
+	busi = Siren.query "$[ /@.distance ]", busi
 	x = 0
 	add_views = SiriAddViews.new
     add_views.make_root(last_ref_id)
