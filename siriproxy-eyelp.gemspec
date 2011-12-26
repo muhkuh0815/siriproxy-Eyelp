@@ -24,6 +24,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "eat"
   s.add_runtime_dependency "httparty"
   s.add_runtime_dependency "json"
-  #s.add_runtime_dependency "open-uri"
+  s.add_runtime_dependency "siren"
   #s.add_runtime_dependency "uri"
 end

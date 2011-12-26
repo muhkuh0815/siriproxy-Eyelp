@@ -256,8 +256,12 @@ end
 
 # safes position in a global variable
 listen_for /(speicher Position|Position speichern|Position abspeichern|Position merken)/i do   
-	$ortla = $mapla
-	$ortlo = $maplo
+	lat = $mapla
+	lon = $maplo
+	mystr = lat.to_s + "," + lon.to_s
+	aFile = File.new("plugins/siriproxy-eyelp/locsave.txt", "w")
+	aFile.write(mystr)
+	aFile.close
 	say "aktueller Ort gespeichert, zum abrufen sage 'zeige Position'", spoken: "aktueller Ort gespeichert"
 	#say "lat:" + $ortla.to_s + "  long:" + $ortlo.to_s , spoken: "" 
 	request_completed 
@@ -265,12 +269,19 @@ end
 
 # loads position from a global variable
 listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Position anzeigen|Position zeige)/i do 
-	if $ortla == NIL or $ortlo == NIL
-		say "Keine Position gespeichert, verwende 'Position speichern'", spoken: "Keine Position gespeichert."
+	aFile = File.new("plugins/siriproxy-eyelp/locsave.txt", "r")
+	str = aFile.gets.to_s
+	aFile.close
+	if str.match(/(,)/)
+	strloc = str.match(/(,)/)
+	lat = strloc.pre_match
+	lon = strloc.post_match
+	end
+	if aFile.to_s == ","
+	say "leeres File, verwende 'Position speichern'", spoken: "Keine Position gespeichert."
 	else
-	
-	lon1 = $ortlo 
-	lat1 = $ortla 
+	lon1 = lon.to_f
+	lat1 = lat.to_f
 	lon2 = $maplo
 	lat2 = $mapla
 	haversine_distance( lat1, lon1, lat2, lon2 )
@@ -283,6 +294,8 @@ listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Po
 	entf = (entf * 10**3).round.to_f / 10**3
 	ent = ent.to_f
 	ent = (entf * 1000)
+	ent = ent.to_s
+	ent = ent.match(/(.)/)
 	say "Entfernung zum Ziel: " + ent.to_s + " m", spoken: "Entfernung zum Ziel: " + ent.to_s + " Meter"
 	
 	else
@@ -292,7 +305,7 @@ listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Po
 	add_views = SiriAddViews.new
     add_views.make_root(last_ref_id)
     map_snippet = SiriMapItemSnippet.new(true)
-    siri_location = SiriLocation.new("gepeicherter Ort" , "gepeicherter Ort", "gepeicherter Ort", "gepeicherter Ort", "durt", "wo", $ortla.to_f, $ortlo.to_s) 
+    siri_location = SiriLocation.new("gepeicherter Ort" , "gepeicherter Ort", "gepeicherter Ort", "gepeicherter Ort", "durt", "wo", lat.to_f, lon.to_s) 
     map_snippet.items << SiriMapItem.new(label="gespeicherter Ort", location=siri_location, detailType="BUSINESS_ITEM")
     print map_snippet.items
     utterance = SiriAssistantUtteranceView.new("Juhu, Ich habe mich gefunden!")
