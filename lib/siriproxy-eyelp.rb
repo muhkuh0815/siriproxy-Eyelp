@@ -277,7 +277,7 @@ listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Po
 	lat = strloc.pre_match
 	lon = strloc.post_match
 	end
-	if aFile.to_s == ","
+	if lat.to_s == ""
 	say "leeres File, verwende 'Position speichern'", spoken: "Keine Position gespeichert."
 	else
 	lon1 = lon.to_f
