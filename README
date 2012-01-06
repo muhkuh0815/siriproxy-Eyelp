@@ -1,65 +1,88 @@
-#######
-# 
-# This is a plugin for Yelp-Searches outside the US.
-# its for german, but should easily be adoptable for other languages.
-#
-# YOU NEED YOUR OWN YELP-API Key for your external IP address, maybe use your
-# dyndns if you dont have a static IP.
-# you can get a free trial Key for 100 requests per day here.
-#    --->   http://www.yelp.com/developers
-#
-# Remember to add the plugin to the "/.siriproxy/config.yml" file!
-# 
-#######
-#
-# Das ist ein Plugin um Yelp-Suchen außerhalb der USA zu ermöglichen.
-# ist natürlich in Deutsch, sollte aber einfach für andere Sprachen umzuschreiben sein. 
-# 
-# IHR BRAUCHT UNBEDINGT EINEN EIGENEN YELP-API KEY eurer externen IP Adresse, probiert
-# es mit dyndns falls ihr keine statische IP habt.
-# Ihr könnt hier einen Test Key für 100 Anfragen pro Tag anfordern
-#    --->   http://www.yelp.com/developers
-#
-#
-# Plugin in "/.siriproxy/config.yml" file hinzufügen !
-#
-#######
-## ##  WIE ES FUNKTIONIERT
-#
-# "suche" + suchwort  = suche im Radius von 5 km
-# 
-# "suche" + suchwort + "in" + stadtname  = sucht in genannten Stadt
-#
-# "suche hier" + suchwort  = suche im Radius von 1 km
-#
-# "suche global" + suchwort  = suche im Radius von 25 km
-#
-# Beispiele: suche Hotel, suche global Mexikanisch, suche Hofbräuhaus in München,
-# suche hier Würstelstand
-#
-#
-# # # # Zusatzfunktion                - Additional Feature
-# # # # Position Speichern und zeigen - save and show position
-#
-# "wo bin ich" = zeigt aktuelle position / shows current position
-#
-# "Position speichern" = speichert Position (zB Parkplatz)  / saves current Position (eg Parkingslot)
-# "Position zeigen" = zeigt gespeicherte Position, aktuelle Position und Entfernung in km/meter  / shows saved Position, current Position and distance in kilometers
-#
-#
-# bei Fragen Twitter: @muhkuh0815
-# oder github.com/muhkuh0815/SiriProxy-Lotto
-# pictures current version:  http://imageshack.us/photo/my-images/859/img0048vb.jpg/
-# http://imageshack.us/photo/my-images/836/img0049xp.jpg/
-#
-# Video old version (without yelp-api): http://www.youtube.com/watch?v=sl726h6HckQ
-#
-#
-####  Todo
-#
-#  sorting JSON hashes ... closest first
-#  displaying red dot in the preview map - not sure if siriproxy supports that 
-#  phone number in description 
-#  ratings (maybe i put them after the name "Hotel Sacher - 4.5" until its supportet from siriproxy)
-#
-######
+###
+# siriproxy-eyelp  Plugin 
+
+This is a plugin for Yelp-Searches outside the US.
+its for german, but should easily be adoptable for other languages.
+
+YOU NEED YOUR OWN YELP-API Key for your external IP address, maybe use your
+dyndns if you dont have a static IP.
+you can get a free trial Key for 100 requests per day here.
+   --->   http://www.yelp.com/developers
+
+    Remember to add the plugin to the "/.siriproxy/config.yml" file!
+
+Das ist ein Plugin um Yelp-Suchen außerhalb der USA zu ermöglichen.
+ist natürlich in Deutsch, sollte aber einfach für andere Sprachen umzuschreiben sein. 
+ 
+IHR BRAUCHT UNBEDINGT EINEN EIGENEN YELP-API KEY eurer externen IP Adresse, probiert
+es mit dyndns falls ihr keine statische IP habt.
+Ihr könnt hier einen Test Key für 100 Anfragen pro Tag anfordern
+    --->   http://www.yelp.com/developers
+
+    Plugin in "/.siriproxy/config.yml" file hinzufügen !
+
+###
+# WIE ES FUNKTIONIERT
+
+"suche" + suchwort  = suche im Radius von 5 km
+
+"suche" + suchwort + "in" + stadtname  = sucht in genannten Stadt
+
+"suche hier" + suchwort  = suche im Radius von 1 km
+
+"suche global" + suchwort  = suche im Radius von 25 km
+
+Beispiele: suche Hotel, suche global Mexikanisch, suche Hofbräuhaus in München,
+suche hier Würstelstand
+
+
+###
+# Zusatzfunktion                - Additional Feature
+# Position Speichern und zeigen - save and show position
+
+"wo bin ich" = zeigt aktuelle position / shows current position
+
+"Position speichern" = speichert Position (zB Parkplatz)  / saves current Position (eg Parkinglot)
+"Position zeigen" = zeigt gespeicherte Position, aktuelle Position und Entfernung in km/meter  / shows saved Position, current Position and distance in kilometers
+
+
+###
+# Installation
+
+Ihr benötigt Siriproxy 0.3.0:
+
+einfach folgende Zeilen in die User/xxx/.siriproxy/config.yml Datei einfügen (Vorsicht mit Zeilenumbrüchen!!)
+
+- name: 'Eyelp'
+  git: 'git://github.com/muhkuh0815/siriproxy-Eyelp.git'
+
+danach einmal Siriproxy update
+die Plugin Dateien liegen dann in
+/User/xxx/.rvm/gems/ruby-1.9.3/bundler/gems/siriproxy-Eyelp
+Vorsicht beim editieren, bei jedem Siriproxy update werden sie wieder überschrieben.
+
+
+Falls ihr das Plugin für euch anpassen wollt empfehle ich die Plugindateien von github runterzuladen und sie in
+/User/xxx/Siriproxy/plugins/siriproxy-eyelp
+zu kopieren.
+Der richtige Eintrag in der config.yml Datei wäre dann:
+
+- name: 'Eyelp'
+  path: '/Users/xxx/SiriProxy/plugins/siriproxy-eyelp'
+
+
+###  
+# Todo
+
+sorting JSON hashes ... closest first
+displaying red dot in the preview map - not sure if siriproxy supports that 
+phone number in description 
+ratings (maybe i put them after the name "Hotel Sacher - 4.5" until its supportet from siriproxy)
+
+
+###
+# Kontakt
+
+bei Fragen Twitter: @muhkuh0815
+oder github.com/muhkuh0815/SiriProxy-Lotto
+Video preview: http://www.youtube.com/watch?v=C3Qf9IKxoWQ

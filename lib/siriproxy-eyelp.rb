@@ -208,8 +208,7 @@ end
 end
 
 # reading from a local JSON File ---- FOR TESTING
-listen_for /(test|test eins)/i do    
-	
+listen_for /(testi|test eins)/i do    
 	
 	str = "Restaurant Il Sole Wiener Neustadt"
 	
