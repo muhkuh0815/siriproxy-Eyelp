@@ -55,6 +55,7 @@ einfach folgende Zeilen in die User/xxx/.siriproxy/config.yml Datei einfügen (V
 
 - name: 'Eyelp'
   git: 'git://github.com/muhkuh0815/siriproxy-Eyelp.git'
+  yelp_key: "XXXXXXXXXXXXXXXXXXXXXX"
 
 danach einmal Siriproxy update
 die Plugin Dateien liegen dann in
@@ -69,6 +70,7 @@ Der richtige Eintrag in der config.yml Datei wäre dann:
 
 - name: 'Eyelp'
   path: '/Users/xxx/SiriProxy/plugins/siriproxy-eyelp'
+  yelp_key: "XXXXXXXXXXXXXXXXXXXXXX"
 
 
 ###  

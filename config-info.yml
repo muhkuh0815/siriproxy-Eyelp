@@ -1,0 +1,18 @@
+#Example configuration options that can be placed in your main SiriProxy config.yml
+
+##########################
+#NOTICE: Modifying these options in this file has no effect. You must put them in SiriProxy's config.yml!
+##########################
+    
+    - name: 'Eyelp'
+      git: 'git://github.com/muhkuh0815/siriproxy-Eyelp.git'
+      yelp_key: "XXXXXXXXXXXXXXXXXXXXXX"  # Your Yelp-Api Key     
+      
+###
+# If you want to edit the plugin you can download the zip version at github 
+# and put it in e.g. /User/yourusername/Siriproxy/Plugins/siriproxy-eyelp/
+# the lines in the config.yml file should then be
+
+    - name: 'Eyelp'
+      path: '/Users/yourusername/SiriProxy/plugins/siriproxy-eyelp'
+      yelp_key: "XXXXXXXXXXXXXXXXXXXXXXX"  # Your Yelp-Api Key   

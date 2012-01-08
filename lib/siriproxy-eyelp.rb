@@ -79,18 +79,11 @@ require 'siren' #for sorting json hashes
 
 
 class SiriProxy::Plugin::Eyelp < SiriProxy::Plugin
-        
+     
     def initialize(config)
-    	#####################################
-    	                                    #
-        $ywsid = "XXXXXXXXXXXXXXXXXXXXXX"   # insert your ywsid key here
-                                            #
-        #####################################
-        # THIS KEY IS NEEDED - if you dont have one, request a free trial key here
-        #               http://www.yelp.com/developers
-        
-        #if you have custom configuration options, process them here!
+    @yelp_key = config ["yelp_key"] 
     end
+
     def doc
     end
     def docs
@@ -138,26 +131,26 @@ listen_for /suche (.*)/i do |phrase|
 		phrase = phrase.sub( " hier ", " " )
 		phrase = phrase.sub( " global ", " " )
 		phrase = phrase.strip		
-		dos = "http://api.yelp.com/business_review_search?term=" + phrase + "&location=Wien&limit=15&ywsid=" + $ywsid.to_s
+		dos = "http://api.yelp.com/business_review_search?term=" + phrase + "&location=Wien&limit=15&ywsid=" + @yelp_key.to_s
 		ss = "in"
 	elsif phrase.match(/( hier )/)  # catching here search: suche hier *   :Range 1 
 		ma = phrase.match(/( hier )/)
 		part = ma.post_match.strip
-		dos = "http://api.yelp.com/business_review_search?term=" + part.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=1&limit=10&ywsid=" + $ywsid.to_s
+		dos = "http://api.yelp.com/business_review_search?term=" + part.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=1&limit=10&ywsid=" + @yelp_key.to_s
 	elsif phrase.match(/( in )/) # catching city-based search:  suche * in *
 		ma = phrase.match(/( in )/)	
 		part2 = ma.post_match.strip
 		part = ma.pre_match.strip
-		dos = "http://api.yelp.com/business_review_search?term=" + part + "&location=" + part2 + "&limit=15&ywsid=" + $ywsid.to_s
+		dos = "http://api.yelp.com/business_review_search?term=" + part + "&location=" + part2 + "&limit=15&ywsid=" + @yelp_key.to_s
 		ss = "in"
 	elsif phrase.match(/( global )/) # catching global search: suche global *   :Range 25
 		ma = phrase.match(/( global )/)	
 		part = ma.post_match.strip
-		dos = "http://api.yelp.com/business_review_search?term=" + part.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=25&limit=25&ywsid=" + $ywsid.to_s
+		dos = "http://api.yelp.com/business_review_search?term=" + part.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=25&limit=25&ywsid=" + @yelp_key.to_s
 	else	# normal search: suche *   :Range 5
 		phrase = phrase.strip
 		part = phrase
-		dos = "http://api.yelp.com/business_review_search?term=" + phrase.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=5&limit=15&ywsid=" + $ywsid.to_s
+		dos = "http://api.yelp.com/business_review_search?term=" + phrase.to_s + "&lat=" + $mapla.to_s + "&long=" + $maplo.to_s + "&radius=5&limit=15&ywsid=" + @yelp_key.to_s
 	end
 	begin
 		dos = URI.parse(URI.encode(dos)) # allows Unicharacters in the search URL
