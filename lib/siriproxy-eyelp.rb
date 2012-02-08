@@ -52,7 +52,7 @@ require 'siren' #for sorting json hashes
 # # # # Zusatzfunktion - Additional Feature
 #### Position Speichern und zeigen - save and show position
 #
-# "Wo bin ich" = zeigt aktuelle position / shows current position
+# "Wo bin ich" = zeigt aktuelle position, adresse und Höhenmeter / shows current position, address and height (meters above sealevel)
 #
 # "Position speichern" = speichert Position (zB Parkplatz)  / saves current Position (eg Parkingslot)
 # "Position zeigen" = zeigt gespeicherte Position, aktuelle Position und Entfernung in km/meter  / shows saved Position, current Position and distance in kilometers
@@ -263,13 +263,19 @@ listen_for /(Wo bin ich|Wo bist du)/i do
     else
         adr = $mapla.to_s + "," + $maplo.to_s
 	addr = getaddress(adr)
-	addr2 = addr.split(",")
-	addr1 = addr2[0].strip
+	ele = getheight(adr)
+	ell = ele.to_s + " Höhenmeter"
+	addrr = addr.split(",")
+	addr1 = addrr[0].strip
+	addr2 = addrr[1].split
+	addr21 =addr2[0].strip
+	addr22 =addr2[1].strip
+	addr3 = addrr[2].strip
 	add_views = SiriAddViews.new
     	add_views.make_root(last_ref_id)
     	map_snippet = SiriMapItemSnippet.new(true)
- 		siri_location = SiriLocation.new("", "Du bin hier", "", "", "", "", $mapla.to_f, $maplo.to_s) 
-	    map_snippet.items << SiriMapItem.new(label=addr, location=siri_location, detailType="BUSINESS_ITEM")
+ 		siri_location = SiriLocation.new("", addr1, addr22, "", "", addr21, $mapla.to_f, $maplo.to_s) 
+	    map_snippet.items << SiriMapItem.new(label="#{ele} Höhenmeter", location=siri_location, detailType="BUSINESS_ITEM")
 	    print map_snippet.items
 	    utterance = SiriAssistantUtteranceView.new(addr1)
 		add_views.views << utterance
@@ -380,6 +386,32 @@ def getaddress(str)
 	  lo = la.post_match
 	  li = lo.match(/(<\/formatted_address)/)
 	  lu = li.pre_match
+	end
+  return lu	
+end  
+
+def getheight(str)
+        dos = "http://maps.googleapis.com/maps/api/elevation/xml?locations=" + str.to_s + "&sensor=false&language=de"
+	begin
+		dos = URI.parse(URI.encode(dos)) # allows Unicharacters in the search URL
+		doc = Nokogiri::XML(open(dos))
+		doc.encoding = 'utf-8'
+# 		doc = doc.text
+	rescue Timeout::Error
+   	 	doc = ""
+	end
+	if doc == NIL
+	  say "Fehler beim Suchen - no data", spoken: "Fehler beim Suchen" 
+	  request_completed
+	  lu = ""
+	elsif
+	  empl = doc.to_s
+	  la = empl.match(/(elevation>)/)
+	  lo = la.post_match
+	  li = lo.match(/(<\/elevation)/)
+	  lu = li.pre_match
+	  lu = lu.to_f
+	  lu = lu.round
 	end
   return lu	
 end  

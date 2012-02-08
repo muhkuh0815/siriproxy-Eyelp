@@ -40,7 +40,7 @@ suche hier Würstelstand
 # Zusatzfunktion                - Additional Feature
 # Position Speichern und zeigen - save and show position
 
-"wo bin ich" = zeigt aktuelle position / shows current position
+"wo bin ich" = zeigt aktuelle position, adresse und Höhenmeter / shows current position, address and height (meters above sealevel)
 
 "Position speichern" = speichert Position (zB Parkplatz)  / saves current Position (eg Parkinglot)
 "Position zeigen" = zeigt gespeicherte Position, aktuelle Position und Entfernung in km/meter  / shows saved Position, current Position and distance in kilometers
