@@ -109,7 +109,7 @@ class SiriProxy::Plugin::Eyelp < SiriProxy::Plugin
     	$mapla = object["properties"]["latitude"]
 	end 
 
-listen_for /suche (.*)/i do |phrase|
+listen_for /suche(.*)/i do |phrase|
 	ss = ""
 	if $maplo == NIL 
 		ss = "nogps"
@@ -125,7 +125,10 @@ listen_for /suche (.*)/i do |phrase|
 	phrase = phrase.sub( " die ", " " )
 	rescue
 	end
-	if ss == "nogps"
+	if @yelp_key == NIL
+		say "Es gibt ein Problem mit dem Yelp-Key, bitte config.yml überprüfen", spoken: "Es gibt ein Problem mit dem Jelp ki, bitte konfig punkt Y M L überprüfen"
+		request_completed
+	elsif ss == "nogps"
 		say "Kein GPS Signal - Ich suche in Wien", spoken: "Kein GPS Signal, Ich suche in Wien"
 		phrase = phrase.sub( " in ", " " )
 		phrase = phrase.sub( " hier ", " " )
@@ -209,7 +212,7 @@ listen_for /suche (.*)/i do |phrase|
 end
 end
 
-# reading from the local "jstest" JSON File ---- FOR TESTING
+# reading from the local "jstest" JSON File ---- FOR TESTING ONLY
 listen_for /(testi|test eins)/i do    
 	
 	#teststring
@@ -258,13 +261,17 @@ listen_for /(Wo bin ich|Wo bist du)/i do
 	if $mapla == NIL
     	say "Das wüßte ich auch gerne, aber ohne GPS Daten bin ich nur ein dummes Telefon."
     else
-    	add_views = SiriAddViews.new
+        adr = $mapla.to_s + "," + $maplo.to_s
+	addr = getaddress(adr)
+	addr2 = addr.split(",")
+	addr1 = addr2[0].strip
+	add_views = SiriAddViews.new
     	add_views.make_root(last_ref_id)
     	map_snippet = SiriMapItemSnippet.new(true)
- 		siri_location = SiriLocation.new("", "Ich bin hier", "", "", "", "", $mapla.to_f, $maplo.to_s) 
-	    map_snippet.items << SiriMapItem.new(label="Du bist hier", location=siri_location, detailType="BUSINESS_ITEM")
+ 		siri_location = SiriLocation.new("", "Du bin hier", "", "", "", "", $mapla.to_f, $maplo.to_s) 
+	    map_snippet.items << SiriMapItem.new(label=addr, location=siri_location, detailType="BUSINESS_ITEM")
 	    print map_snippet.items
-	    utterance = SiriAssistantUtteranceView.new("hier")
+	    utterance = SiriAssistantUtteranceView.new(addr1)
 		add_views.views << utterance
     	add_views.views << map_snippet
     
@@ -275,7 +282,7 @@ listen_for /(Wo bin ich|Wo bist du)/i do
   end
 
 # safes position in the file "locsave.txt"
-listen_for /(speicher Position|Position speichern|Position abspeichern|Position merken|Positionen speichern|speicher Positionen)/i do   
+listen_for /(speicher Position|Position speichern|Position abspeichern|Position merken|Positionen speichern|speicherPosition)/i do   
 	lat = $mapla
 	lon = $maplo
 	if lat == nil
@@ -285,7 +292,7 @@ listen_for /(speicher Position|Position speichern|Position abspeichern|Position 
 		latt = lats.match(/[.]/)
 		latt = latt.post_match.strip.size
 		mystr = lat.to_s + "," + lon.to_s
-		aFile = File.new("plugins/siriproxy-eyelp/locsave.txt", "w")
+		aFile = File.new("/root/The-Three-Little-Pigs-Siri-Proxy/plugins/siriproxy-eyelp/locsave.txt", "w")
 		aFile.write(mystr)
 		aFile.close
 		if latt < 13
@@ -300,7 +307,7 @@ end
 
 # loads position from a global variable
 listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Position anzeigen|Position zeige)/i do 
-	aFile = File.new("plugins/siriproxy-eyelp/locsave.txt", "r")
+	aFile = File.new("/root/The-Three-Little-Pigs-Siri-Proxy/plugins/siriproxy-eyelp/locsave.txt", "r")
 	str = aFile.gets.to_s
 	aFile.close
 	if str.match(/(,)/)
@@ -352,6 +359,30 @@ listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Po
 
 end
 
+
+def getaddress(str)
+        dos = "http://maps.google.com/maps/api/geocode/xml?latlng=" + str.to_s + "&sensor=false&language=de"
+	begin
+		dos = URI.parse(URI.encode(dos)) # allows Unicharacters in the search URL
+		doc = Nokogiri::XML(open(dos))
+		doc.encoding = 'utf-8'
+# 		doc = doc.text
+	rescue Timeout::Error
+   	 	doc = ""
+	end
+	if doc == NIL
+	  say "Fehler beim Suchen - no data", spoken: "Fehler beim Suchen" 
+	  request_completed
+	  lu = ""
+	elsif
+	  empl = doc.to_s
+	  la = empl.match(/(formatted_address>)/)
+	  lo = la.post_match
+	  li = lo.match(/(<\/formatted_address)/)
+	  lu = li.pre_match
+	end
+  return lu	
+end  
 
 #    Thanks to http://www.esawdust.com/blog/businesscard/businesscard.html
 # for the distance calculation code
