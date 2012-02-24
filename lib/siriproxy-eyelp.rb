@@ -298,7 +298,7 @@ listen_for /(speicher Position|Position speichern|Position abspeichern|Position 
 		latt = lats.match(/[.]/)
 		latt = latt.post_match.strip.size
 		mystr = lat.to_s + "," + lon.to_s
-		aFile = File.new("/root/The-Three-Little-Pigs-Siri-Proxy/plugins/siriproxy-eyelp/locsave.txt", "w")
+		aFile = File.new("plugins/siriproxy-eyelp/locsave.txt", "w")
 		aFile.write(mystr)
 		aFile.close
 		if latt < 13
@@ -313,7 +313,7 @@ end
 
 # loads position from a global variable
 listen_for /(zeige Ort|zeige Position|zeige gespeicherten Ort|Position zeigen|Position anzeigen|Position zeige)/i do 
-	aFile = File.new("/root/The-Three-Little-Pigs-Siri-Proxy/plugins/siriproxy-eyelp/locsave.txt", "r")
+	aFile = File.new("plugins/siriproxy-eyelp/locsave.txt", "r")
 	str = aFile.gets.to_s
 	aFile.close
 	if str.match(/(,)/)
